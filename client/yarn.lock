@@ -4510,6 +4510,11 @@ globby@^11.0.4:
     merge2 "^1.4.1"
     slash "^3.0.0"
 
+google-one-tap@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/google-one-tap/-/google-one-tap-1.0.3.tgz#9917d085529bd68f52575831c019be4fdaf8cf43"
+  integrity sha512-gVTJtknvD6nqjPKF/N5k4PeKuasMGFnlZYAZSbubu6dQgPTLZFKs7g9sSY1AimXccVcqVBJQru0samX1zd2RsQ==
+
 graceful-fs@^4.1.2, graceful-fs@^4.1.6, graceful-fs@^4.2.0, graceful-fs@^4.2.4, graceful-fs@^4.2.6, graceful-fs@^4.2.9:
   version "4.2.10"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.10.tgz#147d3a006da4ca3ce14728c7aefc287c367d7a6c"
