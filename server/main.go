@@ -72,6 +72,7 @@ func main() {
 	db.AutoMigrate(&User{})
 
 	e := echo.New()
+	e.Use(middleware.CORS())
 	e.POST("/google", func(c echo.Context) error {
 		var req struct {
 			Token string `json:"token"`
