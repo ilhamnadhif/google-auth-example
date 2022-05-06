@@ -44,13 +44,18 @@ func getToken(email, googleUserId string, userId int) (string, error) {
 
 	return t, nil
 }
-func verifyIdToken(token string) (*idtoken.Payload, error) {
+func verifyIdToken(token string) (idtoken.Payload, error) {
 	user, err := idtoken.Validate(context.Background(), token, GOOGLE_CLIENT_ID)
 	if err != nil {
-		return nil, err
+		return idtoken.Payload{}, err
 	}
-
-	return user, nil
+	if user.Audience != GOOGLE_CLIENT_ID {
+		return idtoken.Payload{}, errors.New("google client id not match")
+	}
+	if user.Issuer != GOOGLE_ISSUER_1 && user.Issuer != GOOGLE_ISSUER_2 {
+		return idtoken.Payload{}, errors.New("google issuer not match")
+	}
+	return *user, nil
 }
 
 type User struct {
@@ -73,25 +78,21 @@ func main() {
 
 	e := echo.New()
 	e.Use(middleware.CORS())
+	//e.Use(middleware.Recover())
 	e.POST("/google", func(c echo.Context) error {
 		var req struct {
 			Token string `json:"token"`
 		}
 		err := c.Bind(&req)
 		if err != nil {
-			echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			 return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 		user, err := verifyIdToken(req.Token)
 		if err != nil {
-			echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			 return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 		fmt.Println("google response", user)
-		if user.Audience != GOOGLE_CLIENT_ID {
-			echo.NewHTTPError(http.StatusBadRequest)
-		}
-		if user.Issuer != GOOGLE_ISSUER_1 && user.Issuer != GOOGLE_ISSUER_2 {
-			echo.NewHTTPError(http.StatusBadRequest)
-		}
+
 
 		emailResp := user.Claims["email"].(string)
 
@@ -103,16 +104,16 @@ func main() {
 					Email:    emailResp,
 				}
 				if err := db.Create(&userdb).Error; err != nil {
-					echo.NewHTTPError(http.StatusBadRequest, err.Error())
+					return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 				}
 			}
-			echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 		fmt.Println(userdb)
 
 		token, err := getToken(emailResp, user.Subject, userdb.ID)
 		if err != nil {
-			echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 		return c.JSON(http.StatusOK, echo.Map{
 			"user": echo.Map{
@@ -139,7 +140,7 @@ func main() {
 
 		var userdb User
 		if err := db.First(&userdb, userId).Error; err != nil {
-			echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 		fmt.Println(userdb)
 		return c.JSON(http.StatusOK, userdb)
